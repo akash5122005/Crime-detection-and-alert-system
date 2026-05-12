@@ -1,0 +1,50 @@
+services:
+  # Backend Node.js Service
+  - type: web
+    name: safezone-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: safezone-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: safezone-redis
+          property: connectionString
+      - key: ML_SERVICE_URL
+        value: https://safezone-ml-service.onrender.com
+      - key: JWT_SECRET
+        generateValue: true
+
+  # Python ML Service
+  - type: web
+    name: safezone-ml-service
+    env: python
+    rootDir: ml-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.13
+
+databases:
+  # Managed PostgreSQL Database
+  - name: safezone-db
+    databaseName: safezone
+    user: safezone_user
+    plan: free
+
+  # Managed Redis Instance
+  - type: redis
+    name: safezone-redis
+    ipAllowList: [] # Allows internal connections only by default
+    plan: free
