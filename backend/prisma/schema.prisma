@@ -1,0 +1,55 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String     @id @default(uuid())
+  name          String
+  email         String     @unique
+  password_hash String
+  role          String     // Admin, Analyst, Field Officer
+  created_at    DateTime   @default(now())
+}
+
+model Incident {
+  id          String   @id @default(uuid())
+  type        String
+  severity    Int
+  lat         Float
+  lng         Float
+  zone_id     String
+  status      String   // open, closed, under investigation
+  description String
+  reported_by String
+  timestamp   DateTime @default(now())
+}
+
+model Zone {
+  id               String @id @default(uuid())
+  name             String
+  boundary_geojson String // Storing as JSON string
+  population       Int
+}
+
+model Alert {
+  id              String    @id @default(uuid())
+  zone_id         String
+  score           Float
+  crime_type      String
+  triggered_at    DateTime  @default(now())
+  acknowledged_by String?
+  acknowledged_at DateTime?
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  user_id      String
+  action       String
+  target_table String
+  target_id    String
+  timestamp    DateTime @default(now())
+}
