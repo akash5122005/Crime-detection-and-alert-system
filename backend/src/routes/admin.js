@@ -1,8 +1,6 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../db');
 const { authenticate, requireRole } = require('../middleware/auth');
-
-const prisma = new PrismaClient();
 const router = express.Router();
 
 router.get('/users', authenticate, requireRole(['Admin']), async (req, res) => {
