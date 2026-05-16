@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const incidentRoutes = require('./routes/incidents');
 const alertRoutes = require('./routes/alerts');
 const adminRoutes = require('./routes/admin');
+const aiRoutes = require('./routes/ai');
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'SafeZone Backend API' });

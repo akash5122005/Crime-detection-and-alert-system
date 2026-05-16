@@ -8,6 +8,7 @@ import Alerts from './components/Alerts';
 import Incidents from './components/Incidents';
 import NewIncident from './components/NewIncident';
 import Admin from './components/Admin';
+import Profile from './components/Profile';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -53,9 +54,22 @@ function App() {
           <NavLink to="/incidents" icon={FileText}>Incidents</NavLink>
           <NavLink to="/alerts" icon={AlertCircle}>Alerts</NavLink>
           <NavLink to="/admin" icon={Settings}>Admin Panel</NavLink>
+          <NavLink to="/profile" icon={User}>My Profile</NavLink>
         </nav>
 
-        <button onClick={handleLogout} className="flex items-center gap-3 p-3 text-red-400 hover:bg-slate-700 rounded-lg transition-colors mt-auto">
+        <div className="mt-auto pt-4 border-t border-slate-700 mb-4">
+           <Link to="/profile" className="flex items-center gap-3 p-2 hover:bg-slate-700 rounded-lg transition-colors group">
+              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                {JSON.parse(localStorage.getItem('user'))?.name?.charAt(0) || 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold truncate">{JSON.parse(localStorage.getItem('user'))?.name || 'User'}</p>
+                <p className="text-xs text-slate-400 truncate">{JSON.parse(localStorage.getItem('user'))?.role || 'Analyst'}</p>
+              </div>
+           </Link>
+        </div>
+
+        <button onClick={handleLogout} className="flex items-center gap-3 p-3 text-red-400 hover:bg-slate-700 rounded-lg transition-colors">
           <LogOut size={20} /> Logout
         </button>
       </div>
@@ -70,6 +84,7 @@ function App() {
           <Route path="/incidents" element={<Incidents token={token} />} />
           <Route path="/incidents/new" element={<NewIncident token={token} />} />
           <Route path="/admin" element={<Admin token={token} />} />
+          <Route path="/profile" element={<Profile token={token} />} />
         </Routes>
       </div>
     </div>

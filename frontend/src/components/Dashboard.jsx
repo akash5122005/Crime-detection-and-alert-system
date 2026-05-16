@@ -7,6 +7,8 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarEleme
 
 export default function Dashboard({ token }) {
   const [incidents, setIncidents] = useState([]);
+  const [aiReport, setAiReport] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -17,6 +19,29 @@ export default function Dashboard({ token }) {
     .then(data => setIncidents(data))
     .catch(console.error);
   }, [token]);
+
+  const generateAIAnalysis = async () => {
+    setIsAnalyzing(true);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${apiUrl}/api/ai/analyze`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ incidents })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setAiReport(data.analysis);
+    } catch (err) {
+      console.error(err);
+      setAiReport('Failed to generate AI analysis. Please check your GROQ_API_KEY.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const kpis = [
     { title: 'Total Incidents', value: incidents.length, icon: <Activity className="text-blue-500" /> },
@@ -89,6 +114,56 @@ export default function Dashboard({ token }) {
           </div>
         </div>
       </div>
+      {/* AI Analysis Section */}
+      <div className="mt-8 bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-700">
+          <ShieldAlert size={120} className="text-blue-500" />
+        </div>
+        
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div>
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <ShieldAlert className="text-blue-400" size={24} />
+              AI Crime Intelligence
+            </h3>
+            <p className="text-slate-400 text-sm mt-1">Harnessing Llama 3 on Groq for real-time strategic analysis</p>
+          </div>
+          <button 
+            onClick={generateAIAnalysis}
+            disabled={isAnalyzing || incidents.length === 0}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-2 px-6 rounded-lg transition-all shadow-lg hover:shadow-blue-500/25 flex items-center gap-2 disabled:opacity-50"
+          >
+            {isAnalyzing ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Analyzing Records...
+              </>
+            ) : (
+              <>
+                <Activity size={18} />
+                Generate Intelligence Report
+              </>
+            )}
+          </button>
+        </div>
+
+        {aiReport ? (
+          <div className="bg-slate-900/50 rounded-xl p-6 border border-blue-500/20 text-slate-300 leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex items-center gap-2 text-blue-400 mb-4 font-bold text-sm uppercase tracking-widest">
+              <CheckCircle size={16} /> Analysis Complete
+            </div>
+            <pre className="whitespace-pre-wrap font-sans text-sm md:text-base">
+              {aiReport}
+            </pre>
+          </div>
+        ) : (
+          <div className="bg-slate-900/30 rounded-xl p-12 border border-slate-700/50 border-dashed text-center text-slate-500">
+            Click the button above to analyze current incident data for hotspots and recommendations.
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
+import { ShieldAlert } from 'lucide-react';

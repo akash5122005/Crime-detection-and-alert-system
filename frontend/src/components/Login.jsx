@@ -4,7 +4,7 @@ import { auth } from '../firebase';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 export default function Login({ setToken }) {
-  const [email, setEmail] = useState('admin@safezone.com');
+  const [email, setEmail] = useState('akash8975015@gmail.com');
   const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +23,7 @@ export default function Login({ setToken }) {
       if (!res.ok) throw new Error(data.error);
       
       localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       setToken(data.token);
     } catch (err) {
       setError(err.message);
@@ -48,6 +49,7 @@ export default function Login({ setToken }) {
       if (!res.ok) throw new Error(data.error);
       
       localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       setToken(data.token);
     } catch (err) {
       setError(err.message);
