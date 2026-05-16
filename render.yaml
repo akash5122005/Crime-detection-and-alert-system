@@ -36,15 +36,15 @@ services:
       - key: PYTHON_VERSION
         value: 3.10.13
 
+  # Managed Redis Instance
+  - type: redis
+    name: safezone-redis
+    ipAllowList: [] # Allows internal connections only by default
+    plan: free
+
 databases:
   # Managed PostgreSQL Database
   - name: safezone-db
     databaseName: safezone
     user: safezone_user
-    plan: free
-
-  # Managed Redis Instance
-  - type: redis
-    name: safezone-redis
-    ipAllowList: [] # Allows internal connections only by default
     plan: free
