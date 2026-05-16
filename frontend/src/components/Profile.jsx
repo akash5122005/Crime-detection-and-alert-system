@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { User, Mail, Shield, Calendar, Bell, Settings, Check, MapPin, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { jwtDecode } from 'jwt-decode';
