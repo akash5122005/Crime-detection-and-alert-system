@@ -4,10 +4,10 @@ import { io } from 'socket.io-client';
 
 export default function Alerts({ token }) {
   const [alerts, setAlerts] = useState([]);
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   useEffect(() => {
     // Fetch initial alerts
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     fetch(`${apiUrl}/api/alerts`, {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -16,18 +16,16 @@ export default function Alerts({ token }) {
     .catch(console.error);
 
     // Setup Socket.IO for real-time alerts
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     const socket = io(apiUrl);
     socket.on('anomaly_alert', (newAlert) => {
       setAlerts(prev => [newAlert, ...prev]);
     });
 
     return () => socket.disconnect();
-  }, [token]);
+  }, [token, apiUrl]);
 
   const handleAcknowledge = async (id) => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       await fetch(`${apiUrl}/api/alerts/${id}/acknowledge`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` }
