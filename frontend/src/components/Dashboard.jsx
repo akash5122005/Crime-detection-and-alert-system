@@ -57,10 +57,10 @@ export default function Dashboard({ token }) {
   };
 
   const kpis = [
-    { title: 'Total Incidents', value: incidents.length, icon: <Activity className="text-blue-500" /> },
-    { title: 'Open Cases', value: incidents.filter(i => i.status === 'open').length, icon: <AlertTriangle className="text-yellow-500" /> },
-    { title: 'Resolved Cases', value: incidents.filter(i => i.status === 'closed').length, icon: <CheckCircle className="text-green-500" /> },
-    { title: 'High Severity', value: incidents.filter(i => i.severity >= 4).length, icon: <MapPin className="text-red-500" /> },
+    { title: 'Total Incidents', value: Array.isArray(incidents) ? incidents.length : 0, icon: <Activity className="text-blue-500" /> },
+    { title: 'Open Cases', value: Array.isArray(incidents) ? incidents.filter(i => i.status === 'open').length : 0, icon: <AlertTriangle className="text-yellow-500" /> },
+    { title: 'Resolved Cases', value: Array.isArray(incidents) ? incidents.filter(i => i.status === 'closed').length : 0, icon: <CheckCircle className="text-green-500" /> },
+    { title: 'High Severity', value: Array.isArray(incidents) ? incidents.filter(i => i.severity >= 4).length : 0, icon: <MapPin className="text-red-500" /> },
   ];
 
   // Chart data for demo purposes
