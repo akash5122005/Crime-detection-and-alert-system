@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const groq = require('../config/groq');
 const prisma = require('../db');
-const authenticateToken = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const rateLimit = require('express-rate-limit');
 
 const aiLimiter = rateLimit({
@@ -12,7 +12,7 @@ const aiLimiter = rateLimit({
 });
 
 // AI FEATURE 1: CRIME ANALYST CHATBOT
-router.post('/chat', authenticateToken, aiLimiter, async (req, res) => {
+router.post('/chat', authenticate, aiLimiter, async (req, res) => {
   const { message, context_type } = req.body;
   
   try {
@@ -59,7 +59,7 @@ router.post('/chat', authenticateToken, aiLimiter, async (req, res) => {
 });
 
 // AI FEATURE 2: INCIDENT REPORT ASSISTANT
-router.post('/parse-incident', authenticateToken, aiLimiter, async (req, res) => {
+router.post('/parse-incident', authenticate, aiLimiter, async (req, res) => {
   const { raw_description } = req.body;
   
   try {
@@ -90,7 +90,7 @@ router.post('/parse-incident', authenticateToken, aiLimiter, async (req, res) =>
 });
 
 // AI FEATURE 3: ANOMALY EXPLANATION
-router.post('/explain-anomaly', authenticateToken, aiLimiter, async (req, res) => {
+router.post('/explain-anomaly', authenticate, aiLimiter, async (req, res) => {
   const { zone_id, zone_name, score, crime_type, triggered_at, recent_count, historical_avg } = req.body;
   
   try {
@@ -125,7 +125,7 @@ router.post('/explain-anomaly', authenticateToken, aiLimiter, async (req, res) =
 });
 
 // AI FEATURE 4: WEEKLY AI REPORT
-router.post('/weekly-report', authenticateToken, aiLimiter, async (req, res) => {
+router.post('/weekly-report', authenticate, aiLimiter, async (req, res) => {
   const { start_date, end_date } = req.body;
   
   try {

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../db');
-const authenticateToken = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 
 // FEATURE 1: CITIZEN CRIME REPORTING PORTAL (Public)
 router.post('/report', async (req, res) => {
@@ -33,7 +33,7 @@ router.post('/report', async (req, res) => {
 });
 
 // Admin Review (Protected)
-router.get('/pending', authenticateToken, async (req, res) => {
+router.get('/pending', authenticate, async (req, res) => {
   try {
     const reports = await prisma.citizenReport.findMany({
       where: { status: 'pending' },
@@ -45,7 +45,7 @@ router.get('/pending', authenticateToken, async (req, res) => {
   }
 });
 
-router.post('/:id/approve', authenticateToken, async (req, res) => {
+router.post('/:id/approve', authenticate, async (req, res) => {
   try {
     const report = await prisma.citizenReport.update({
       where: { id: req.params.id },
