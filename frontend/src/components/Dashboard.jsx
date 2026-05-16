@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement } from 'chart.js';
-import { Shield, TrendingUp, AlertTriangle, MapPin, Clock, Zap, Activity, ShieldCheck, User } from 'lucide-react';
+import { Shield, TrendingUp, AlertTriangle, MapPin, Clock, Zap, Activity, ShieldCheck, User, CheckCircle } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Line, Doughnut } from 'react-chartjs-2';
 import { motion } from 'framer-motion';
