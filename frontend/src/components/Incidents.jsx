@@ -7,7 +7,8 @@ export default function Incidents({ token }) {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/incidents', {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    fetch(`${apiUrl}/api/incidents`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(res => res.json())

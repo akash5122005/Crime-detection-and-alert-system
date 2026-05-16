@@ -7,7 +7,8 @@ export default function Alerts({ token }) {
 
   useEffect(() => {
     // Fetch initial alerts
-    fetch('http://localhost:5000/api/alerts', {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    fetch(`${apiUrl}/api/alerts`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(res => res.json())
@@ -15,7 +16,8 @@ export default function Alerts({ token }) {
     .catch(console.error);
 
     // Setup Socket.IO for real-time alerts
-    const socket = io('http://localhost:5000');
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const socket = io(apiUrl);
     socket.on('anomaly_alert', (newAlert) => {
       setAlerts(prev => [newAlert, ...prev]);
     });
@@ -25,7 +27,8 @@ export default function Alerts({ token }) {
 
   const handleAcknowledge = async (id) => {
     try {
-      await fetch(`http://localhost:5000/api/alerts/${id}/acknowledge`, {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      await fetch(`${apiUrl}/api/alerts/${id}/acknowledge`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` }
       });
