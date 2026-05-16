@@ -13,14 +13,9 @@ services:
       - key: PORT
         value: 5000
       - key: DATABASE_URL
-        fromDatabase:
-          name: safezone-db
-          property: connectionString
+        sync: false
       - key: REDIS_URL
-        fromService:
-          type: redis
-          name: safezone-redis
-          property: connectionString
+        sync: false
       - key: ML_SERVICE_URL
         value: https://safezone-ml-service.onrender.com
       - key: JWT_SECRET
@@ -38,15 +33,5 @@ services:
       - key: PYTHON_VERSION
         value: 3.10.13
 
-  # Managed Redis Instance
-  - type: redis
-    name: safezone-redis
-    ipAllowList: [] # Allows internal connections only by default
-    plan: free
-
-databases:
-  # Managed PostgreSQL Database
-  - name: safezone-db
-    databaseName: safezone
-    user: safezone_user
-    plan: free
+  # Note: DATABASE_URL and REDIS_URL must be provided manually in the Render Dashboard
+  # since we are using external services (like Supabase and Upstash).
