@@ -1,7 +1,15 @@
 const express = require('express');
 const prisma = require('../db');
 const { authenticate } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
 const router = express.Router();
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
+});
+const upload = multer({ storage });
 
 // Get all incidents (with optional filters)
 router.get('/', authenticate, async (req, res) => {
@@ -17,10 +25,11 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
-// Create new incident
-router.post('/', authenticate, async (req, res) => {
+// Create new incident with evidence photos
+router.post('/', authenticate, upload.array('photos', 5), async (req, res) => {
   const { type, severity, lat, lng, zone_id, status, description } = req.body;
   try {
+    const photo_urls = req.files ? req.files.map(f => `/uploads/${f.filename}`) : [];
     const incident = await prisma.incident.create({
       data: {
         type, 
@@ -30,7 +39,8 @@ router.post('/', authenticate, async (req, res) => {
         zone_id, 
         status: status || 'open', 
         description, 
-        reported_by: req.user.id
+        reported_by: req.user.id,
+        photo_urls
       }
     });
     res.status(201).json(incident);

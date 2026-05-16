@@ -9,10 +9,14 @@ const incidentRoutes = require('./routes/incidents');
 const alertRoutes = require('./routes/alerts');
 const adminRoutes = require('./routes/admin');
 const aiRoutes = require('./routes/ai');
+const citizenRoutes = require('./routes/citizen');
 
 dotenv.config();
 
 const app = express();
+app.use(express.json());
+app.use(cors());
+app.use('/uploads', express.static('uploads'));
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
@@ -30,6 +34,7 @@ app.use('/api/incidents', incidentRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/citizen', citizenRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'SafeZone Backend API' });

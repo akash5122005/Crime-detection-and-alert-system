@@ -25,7 +25,29 @@ model Incident {
   status      String   // open, closed, under investigation
   description String
   reported_by String
+  photo_urls  String[] @default([]) // Array of paths to evidence photos
   timestamp   DateTime @default(now())
+}
+
+model CitizenReport {
+  id           String   @id @default(uuid())
+  tracking_id  String   @unique // CR-2024-XXXXX
+  name         String?
+  phone        String?
+  location     String
+  type         String
+  description  String
+  photo_url    String?
+  status       String   @default("pending") // pending, approved, rejected
+  created_at   DateTime @default(now())
+}
+
+model UserPreference {
+  id              String   @id @default(uuid())
+  user_id         String   @unique
+  watched_zones   String[] @default([])
+  crime_types     String[] @default([])
+  min_anomaly_score Float  @default(0.5)
 }
 
 model Zone {
@@ -33,6 +55,7 @@ model Zone {
   name             String
   boundary_geojson String // Storing as JSON string
   population       Int
+  risk_score       Int    @default(0)
 }
 
 model Alert {
