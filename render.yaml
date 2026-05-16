@@ -2,6 +2,7 @@ services:
   # Backend Node.js Service
   - type: web
     name: safezone-backend
+    plan: free
     env: node
     rootDir: backend
     buildCommand: npm install && npx prisma generate
@@ -28,6 +29,7 @@ services:
   # Python ML Service
   - type: web
     name: safezone-ml-service
+    plan: free
     env: python
     rootDir: ml-service
     buildCommand: pip install -r requirements.txt
