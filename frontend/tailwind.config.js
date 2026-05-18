@@ -41,6 +41,7 @@ export default {
         "slide-up": "slideUp 0.4s ease-out",
         "slide-in-right": "slideInRight 0.3s ease-out",
         "fade-in": "fadeIn 0.3s ease-out",
+        "marquee": "marquee 35s linear infinite",
       },
       keyframes: {
         float: {
@@ -62,6 +63,10 @@ export default {
         fadeIn: {
           "from": { opacity: 0 },
           "to": { opacity: 1 }
+        },
+        marquee: {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(-100%)" }
         }
       }
     },

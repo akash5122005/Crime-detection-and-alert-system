@@ -9,6 +9,7 @@ import { useDashboardRefresh } from '../hooks/useRealtime';
 import GlassCard from './ui/GlassCard';
 import GlassButton from './ui/GlassButton';
 import GlassBadge from './ui/GlassBadge';
+import LiveTicker from './ui/LiveTicker';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend);
 
@@ -184,6 +185,8 @@ export default function Dashboard({ token }) {
 
   return (
     <div className="p-8 space-y-8 select-none">
+      <LiveTicker token={token} />
+      
       {/* KPIs with Staggered Entrance */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {kpis.map((kpi, i) => (
