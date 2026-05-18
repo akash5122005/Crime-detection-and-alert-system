@@ -24,6 +24,9 @@ const io = new Server(httpServer, {
   }
 });
 
+const { setupRealtimeListeners } = require('./config/realtime');
+setupRealtimeListeners(io);
+
 app.set('io', io);
 
 app.use(cors());

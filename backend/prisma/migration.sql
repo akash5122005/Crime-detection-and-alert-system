@@ -112,3 +112,43 @@ CREATE INDEX idx_incidents_status ON incidents(status);
 CREATE INDEX idx_alerts_triggered ON alerts(triggered_at DESC);
 CREATE INDEX idx_alerts_zone ON alerts(zone_id);
 CREATE INDEX idx_audit_user ON audit_logs(user_id);
+
+-- Trigger: notify on new incident
+CREATE OR REPLACE FUNCTION notify_new_incident()
+RETURNS TRIGGER AS $$
+BEGIN
+  PERFORM pg_notify('new_incident', row_to_json(NEW)::text);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER incident_insert_trigger
+  AFTER INSERT ON incidents
+  FOR EACH ROW EXECUTE FUNCTION notify_new_incident();
+
+-- Trigger: notify on new alert
+CREATE OR REPLACE FUNCTION notify_new_alert()
+RETURNS TRIGGER AS $$
+BEGIN
+  PERFORM pg_notify('new_alert', row_to_json(NEW)::text);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER alert_insert_trigger
+  AFTER INSERT ON alerts
+  FOR EACH ROW EXECUTE FUNCTION notify_new_alert();
+
+-- Trigger: update updated_at automatically
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER incidents_updated_at
+  BEFORE UPDATE ON incidents
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
