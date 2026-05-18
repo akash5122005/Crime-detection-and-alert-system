@@ -11,6 +11,7 @@ import Admin from './components/Admin';
 import Profile from './components/Profile';
 import AIChat from './components/AIChat';
 import Reports from './components/Reports';
+import LiveIndicator from './components/LiveIndicator';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'react-hot-toast';
 import { Sun, Moon, Bell, Menu, X, Command as CommandIcon, Search, FilePlus, AlertTriangle } from 'lucide-react';
@@ -35,7 +36,6 @@ function App() {
       }
       if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
         e.preventDefault();
-        // Focus global search if it exists, otherwise just open palette
         setIsCommandPaletteOpen(true);
       }
     };
@@ -70,7 +70,11 @@ function App() {
   const NavLink = ({ to, icon: Icon, children }) => (
     <Link 
       to={to} 
-      className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 ${location.pathname.startsWith(to) ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'hover:bg-slate-700 text-slate-300'}`}
+      className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-300 select-none ${
+        location.pathname.startsWith(to) 
+          ? 'bg-indigo-600/20 border-indigo-500/35 text-indigo-300 shadow-glow/10 font-bold' 
+          : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/10 text-slate-400 hover:text-slate-200'
+      }`}
     >
       <Icon size={20} className="shrink-0" />
       <AnimatePresence mode="wait">
@@ -95,26 +99,31 @@ function App() {
   };
 
   return (
-    <div className={`flex h-screen transition-colors duration-300 ${darkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`flex h-screen overflow-hidden ${darkMode ? 'bg-transparent text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       <Toaster position="top-right" />
       
       {/* Sidebar */}
       <motion.div 
         animate={{ width: isSidebarCollapsed ? '80px' : '256px' }}
-        className={`bg-slate-900 border-r border-slate-800 p-4 flex flex-col relative transition-colors duration-300 ${!darkMode && 'bg-white border-slate-200'}`}
+        className="bg-slate-950/40 backdrop-blur-md border-r border-slate-900/80 p-4 flex flex-col relative transition-colors duration-300 shadow-xl z-20"
       >
-        <div className="flex items-center gap-3 text-blue-500 font-bold text-2xl mb-8 overflow-hidden">
-          <ShieldAlert size={32} className="shrink-0" />
+        <div className="flex items-center gap-3 text-indigo-500 font-extrabold text-2xl mb-8 overflow-hidden pl-1 select-none">
+          <ShieldAlert size={32} className="shrink-0 drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
           <AnimatePresence>
             {!isSidebarCollapsed && (
-              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <motion.span 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+                className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent"
+              >
                 SafeZone
               </motion.span>
             )}
           </AnimatePresence>
         </div>
         
-        <nav className="flex-1 space-y-2">
+        <nav className="flex-1 space-y-2.5">
           <NavLink to="/dashboard" icon={LayoutDashboard}>Dashboard</NavLink>
           <NavLink to="/map" icon={MapIcon}>Crime Map</NavLink>
           <NavLink to="/incidents" icon={FileText}>Incidents</NavLink>
@@ -124,21 +133,21 @@ function App() {
           <NavLink to="/profile" icon={User}>My Profile</NavLink>
         </nav>
 
-        <div className="mt-auto pt-4 border-t border-slate-800 mb-4 overflow-hidden">
-           <Link to="/profile" className="flex items-center gap-3 p-2 hover:bg-slate-800 rounded-lg transition-colors group">
-              <div className="w-10 h-10 shrink-0 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-600/20">
+        <div className="mt-auto pt-4 border-t border-slate-900 mb-4 overflow-hidden">
+           <Link to="/profile" className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-xl border border-transparent hover:border-white/10 transition-all group">
+              <div className="w-10 h-10 shrink-0 rounded-full bg-indigo-600 flex items-center justify-center text-indigo-100 font-extrabold shadow-lg shadow-indigo-600/25 border border-indigo-400/20">
                 {JSON.parse(localStorage.getItem('user'))?.name?.charAt(0) || 'U'}
               </div>
               {!isSidebarCollapsed && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold truncate">{JSON.parse(localStorage.getItem('user'))?.name || 'User'}</p>
-                  <p className="text-xs text-slate-500 truncate">{JSON.parse(localStorage.getItem('user'))?.role || 'Analyst'}</p>
+                  <p className="text-sm font-bold truncate text-slate-200 group-hover:text-slate-100">{JSON.parse(localStorage.getItem('user'))?.name || 'User'}</p>
+                  <p className="text-xs text-slate-500 truncate capitalize">{JSON.parse(localStorage.getItem('user'))?.role?.replace('_', ' ') || 'Analyst'}</p>
                 </div>
               )}
            </Link>
         </div>
 
-        <button onClick={handleLogout} className="flex items-center gap-3 p-3 text-red-400 hover:bg-slate-800 rounded-lg transition-colors">
+        <button onClick={handleLogout} className="flex items-center gap-3 p-3 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 border border-transparent hover:border-rose-500/20 rounded-xl transition-all font-semibold cursor-pointer">
           <LogOut size={20} className="shrink-0" /> 
           {!isSidebarCollapsed && <span>Logout</span>}
         </button>
@@ -146,31 +155,35 @@ function App() {
         {/* Collapse Toggle */}
         <button 
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute -right-3 top-20 bg-blue-600 text-white rounded-full p-1 shadow-lg hover:scale-110 transition-transform"
+          className="absolute -right-3.5 top-8 bg-indigo-600 border border-indigo-400/30 text-indigo-100 rounded-full p-1.5 shadow-lg shadow-indigo-600/30 hover:scale-110 active:scale-95 transition-transform cursor-pointer"
         >
           {isSidebarCollapsed ? <Menu size={14} /> : <X size={14} />}
         </button>
       </motion.div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
         {/* Navbar */}
-        <header className={`h-16 border-b flex items-center justify-between px-8 shrink-0 transition-colors duration-300 ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+        <header className="h-16 bg-slate-950/20 backdrop-blur-md border-b border-slate-900/60 flex items-center justify-between px-8 shrink-0 shadow-sm z-10">
           <div className="flex items-center gap-4 text-slate-500">
-            <Command size={18} />
-            <span className="text-sm font-medium">Press <kbd className="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700 text-xs">Ctrl+K</kbd> to search</span>
+            <CommandIcon size={18} className="text-indigo-400 animate-pulse" />
+            <span className="text-xs font-semibold text-slate-400 select-none">
+              Press <kbd className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-[10px] font-bold font-mono">Ctrl+K</kbd> to search
+            </span>
           </div>
           
           <div className="flex items-center gap-6">
+            <LiveIndicator />
             <button 
               onClick={() => setDarkMode(!darkMode)}
-              className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400"
+              className="p-2.5 hover:bg-white/5 border border-transparent hover:border-white/10 rounded-xl transition-all text-slate-400 hover:text-slate-200 cursor-pointer"
             >
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <div className="relative">
-              <Bell size={20} className="text-slate-400 cursor-pointer hover:text-blue-500 transition-colors" />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-slate-900 animate-pulse"></span>
+            <div className="relative p-2.5 hover:bg-white/5 border border-transparent hover:border-white/10 rounded-xl transition-all text-slate-400 hover:text-indigo-400 cursor-pointer">
+              <Bell size={20} />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border border-slate-950 animate-ping"></span>
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border border-slate-950"></span>
             </div>
           </div>
         </header>
