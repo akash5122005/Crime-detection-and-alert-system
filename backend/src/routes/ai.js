@@ -126,47 +126,134 @@ router.post('/explain-anomaly', authenticate, aiLimiter, async (req, res) => {
 
 // AI FEATURE 4: WEEKLY AI REPORT
 router.post('/weekly-report', authenticate, aiLimiter, async (req, res) => {
-  const { start_date, end_date } = req.body;
-  
   try {
+    // CHECK 1: Groq key exists
+    if (!process.env.GROQ_API_KEY) {
+      return res.status(500).json({
+        error: "Groq API key not configured. Add GROQ_API_KEY to your .env file."
+      });
+    }
+
+    const { start_date, end_date } = req.body;
+
+    // CHECK 2: Dates are provided
+    if (!start_date || !end_date) {
+      return res.status(400).json({ error: "start_date and end_date are required." });
+    }
+
+    // Fetch data from DB using Prisma
     const incidents = await prisma.incident.findMany({
-      where: { timestamp: { gte: new Date(start_date), lte: new Date(end_date) } }
+      where: {
+        timestamp: {
+          gte: new Date(start_date),
+          lte: new Date(end_date)
+        }
+      },
+      select: {
+        type: true,
+        zone_id: true,
+        severity: true,
+        timestamp: true
+      }
     });
+
     const alerts = await prisma.alert.findMany({
-      where: { triggered_at: { gte: new Date(start_date), lte: new Date(end_date) } }
+      where: {
+        triggered_at: {
+          gte: new Date(start_date),
+          lte: new Date(end_date)
+        }
+      },
+      select: {
+        zone_id: true,
+        score: true,
+        crime_type: true,
+        triggered_at: true
+      }
     });
+
     const zoneStats = await prisma.incident.groupBy({
       by: ['zone_id', 'type'],
-      where: { timestamp: { gte: new Date(start_date), lte: new Date(end_date) } },
-      _count: { _all: true }
+      where: {
+        timestamp: {
+          gte: new Date(start_date),
+          lte: new Date(end_date)
+        }
+      },
+      _count: {
+        _all: true
+      }
     });
 
-    const system = `You are a senior crime analyst writing an official weekly report.
-    Write professionally. Use specific numbers from the data provided.
-    Respond in JSON only:
-    {
-      "executive_summary": "3-4 sentence overall summary",
-      "top_zones": [{ "zone": "name", "count": number, "primary_crime": "type", "trend": "improving|stable|worsening", "analysis": "2 sentences" }],
-      "trend_analysis": "paragraph about overall crime trends this week vs previous patterns",
-      "recommendations": ["actionable recommendation 1", "actionable recommendation 2", "actionable recommendation 3"]
-    }`;
+    // If no data found, return a friendly empty report instead of crashing
+    if (incidents.length === 0) {
+      return res.json({
+        executive_summary: `No incidents were recorded between ${start_date} and ${end_date}.`,
+        top_zones: [],
+        trend_analysis: "No data available for this period.",
+        recommendations: ["Continue regular monitoring.", "Ensure field officers are submitting incident reports."],
+        generated_at: new Date()
+      });
+    }
 
-    const userMessage = `Weekly data (${start_date} to ${end_date}):
-    Total incidents: ${incidents.length}
-    Total anomaly alerts: ${alerts.length}
-    Zone breakdown: ${JSON.stringify(zoneStats)}`;
+    const system = `You are a senior crime analyst writing an official weekly intelligence report.
+Use specific numbers from the data. Be professional and concise.
+Respond ONLY in valid JSON. No extra text, no markdown, no backticks.
+JSON format:
+{
+  "executive_summary": "3-4 sentence overall summary with specific numbers",
+  "top_zones": [
+    {
+      "zone": "Zone name or ID",
+      "count": total incident count as number,
+      "primary_crime": "most common crime type",
+      "trend": "improving or stable or worsening",
+      "analysis": "2 sentences about this zone"
+    }
+  ],
+  "trend_analysis": "paragraph about overall crime trends",
+  "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"]
+}`;
+
+    const userMessage = `Weekly crime data from ${start_date} to ${end_date}:
+Total incidents: ${incidents.length}
+Total anomaly alerts: ${alerts.length}
+Zone and crime breakdown: ${JSON.stringify(zoneStats.slice(0, 20))}
+Sample incidents: ${JSON.stringify(incidents.slice(0, 30))}`;
 
     const response = await groq.chat.completions.create({
       model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
-      messages: [{ role: "system", content: system }, { role: "user", content: userMessage }],
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: userMessage }
+      ],
       max_tokens: 1024,
       temperature: 0.3
     });
 
-    res.json({ ...JSON.parse(response.choices[0].message.content), generated_at: new Date() });
+    const rawText = response.choices[0].message.content;
+
+    // Safely parse JSON — strip backticks if model added them
+    const clean = rawText.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(clean);
+
+    return res.json({ ...parsed, generated_at: new Date() });
+
   } catch (error) {
-    console.error('AI Report error:', error);
-    res.status(500).json({ error: 'Failed to generate weekly report' });
+    console.error("Weekly report error:", error.message || error);
+
+    // Specific error messages for easier debugging
+    if (error.message && (error.message.includes("401") || error.message.includes("invalid_api_key"))) {
+      return res.status(500).json({ error: "Invalid Groq API key. Check your GROQ_API_KEY in .env" });
+    }
+    if (error.message && error.message.includes("429")) {
+      return res.status(429).json({ error: "Groq rate limit reached. Wait 1 minute and try again." });
+    }
+    if (error instanceof SyntaxError) {
+      return res.status(500).json({ error: "AI returned invalid JSON. Try again." });
+    }
+
+    return res.status(500).json({ error: "Failed to generate report. " + (error.message || error) });
   }
 });
 

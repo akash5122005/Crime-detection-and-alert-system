@@ -26,12 +26,16 @@ export default function Reports({ token }) {
     }, 1500);
 
     try {
+      const authToken = token 
+        || localStorage.getItem("accessToken") 
+        || localStorage.getItem("token");
+
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const res = await fetch(`${apiUrl}/api/ai/weekly-report`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${authToken}` 
         },
         body: JSON.stringify({ 
           start_date: dateRange.start,

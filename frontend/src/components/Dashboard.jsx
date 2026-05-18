@@ -36,12 +36,16 @@ export default function Dashboard({ token }) {
   const generateAIAnalysis = async () => {
     setIsAnalyzing(true);
     try {
+      const authToken = token 
+        || localStorage.getItem("accessToken") 
+        || localStorage.getItem("token");
+
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const res = await fetch(`${apiUrl}/api/ai/analyze`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${authToken}` 
         },
         body: JSON.stringify({ incidents })
       });
