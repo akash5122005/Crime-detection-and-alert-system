@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { AlertCircle, Target, Info, Layers, Maximize, MousePointer2 } from 'lucide-react';
+import { AlertCircle, Target, Info, Layers, Maximize, MousePointer2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function ChangeView({ center, zoom }) {
@@ -39,7 +39,7 @@ export default function CrimeMap({ token }) {
   }, [token]);
 
   return (
-    <div className="h-full w-full relative">
+    <div className="h-[calc(100vh-64px)] w-full relative">
       <MapContainer 
         center={mapConfig.center} 
         zoom={mapConfig.zoom} 
