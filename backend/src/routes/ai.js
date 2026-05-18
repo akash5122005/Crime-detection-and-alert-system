@@ -170,4 +170,53 @@ router.post('/weekly-report', authenticate, aiLimiter, async (req, res) => {
   }
 });
 
+// AI FEATURE 5: GENERAL DASHBOARD CRIME INTELLIGENCE REPORT
+router.post('/analyze', authenticate, aiLimiter, async (req, res) => {
+  const { incidents } = req.body;
+  
+  if (!incidents || !Array.isArray(incidents) || incidents.length === 0) {
+    return res.json({ analysis: "No incident records found. Seed some data first to generate a strategic intelligence report." });
+  }
+
+  try {
+    const totalCount = incidents.length;
+    const highSeverityCount = incidents.filter(i => i.severity >= 4).length;
+    const openCount = incidents.filter(i => i.status === 'open').length;
+    
+    // Group incidents by type for context
+    const typesMap = {};
+    incidents.forEach(i => {
+      typesMap[i.type] = (typesMap[i.type] || 0) + 1;
+    });
+
+    const system = `You are a high-level crime intelligence officer. Given a JSON summary of recent crime incidents,
+    analyze the patterns and provide a premium, highly professional strategic intelligence report.
+    Structure your response with:
+    1. 🛡️ CRIME PATTERN OVERVIEW (2-3 sentences discussing total incidents and dominant crime categories)
+    2. 📍 SEVERITY & RISK HOTSPOTS (2 sentences identifying critical high-severity zones)
+    3. 🎯 ACTIONABLE POLICE DIRECTIVES (3 bullet points specifying immediate officer deployment recommendations)
+    Keep the tone extremely serious, concise, and structured. Do not output markdown codeblocks, just raw formatted text.`;
+
+    const userMessage = `Recent Crime Stats:
+    - Total Incidents: ${totalCount}
+    - Open Cases: ${openCount}
+    - High-Severity Incidents (Rating >= 4): ${highSeverityCount}
+    - Crime Type Breakdown: ${JSON.stringify(typesMap)}
+    
+    Raw Incident Data Sample (up to 20): ${JSON.stringify(incidents.slice(0, 20))}`;
+
+    const response = await groq.chat.completions.create({
+      model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+      messages: [{ role: "system", content: system }, { role: "user", content: userMessage }],
+      max_tokens: 768,
+      temperature: 0.25
+    });
+
+    res.json({ analysis: response.choices[0].message.content });
+  } catch (error) {
+    console.error('AI Analyze error:', error);
+    res.status(500).json({ error: 'Failed to generate crime analysis' });
+  }
+});
+
 module.exports = router;

@@ -10,11 +10,14 @@ export default function Reports({ token }) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [report, setReport] = useState(null);
+  const [error, setError] = useState(null);
 
   const steps = ["Fetching incident data...", "Analysing patterns...", "Writing report..."];
 
   const generateReport = async () => {
     setIsLoading(true);
+    setError(null);
+    setReport(null);
     setLoadingStep(0);
     
     // Simulate steps
@@ -36,9 +39,13 @@ export default function Reports({ token }) {
         })
       });
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to generate intelligence report');
+      }
       setReport(data);
     } catch (err) {
       console.error(err);
+      setError(err.message || 'Network error connecting to intelligence server.');
     } finally {
       clearInterval(timer);
       setIsLoading(false);
@@ -196,8 +203,19 @@ export default function Reports({ token }) {
           </motion.div>
         ) : (
           <div className="h-[400px] flex flex-col items-center justify-center bg-slate-900/50 rounded-3xl border border-slate-800 border-dashed text-slate-500">
-            <FileText size={48} className="mb-4 opacity-20" />
-            <p className="font-medium">Select a date range and click generate to create a report.</p>
+            {error ? (
+              <div className="text-center p-6 max-w-md">
+                <AlertTriangle className="text-red-500 mx-auto mb-4" size={48} />
+                <h3 className="text-lg font-bold text-slate-200 mb-2">Error Generating Report</h3>
+                <p className="text-sm text-slate-400 mb-4">{error}</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Try logging out and logging back in to refresh your authorization credentials.</p>
+              </div>
+            ) : (
+              <>
+                <FileText size={48} className="mb-4 opacity-20" />
+                <p className="font-medium">Select a date range and click generate to create a report.</p>
+              </>
+            )}
           </div>
         )}
       </AnimatePresence>
