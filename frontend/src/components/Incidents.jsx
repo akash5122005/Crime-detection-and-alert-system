@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FileText, Search, Plus, Filter, MoreVertical, X, MapPin, Calendar, User, Tag } from 'lucide-react';
+import { FileText, Search, Plus, Filter, MoreVertical, X, MapPin, Calendar, User, Tag, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
@@ -9,19 +9,39 @@ export default function Incidents({ token }) {
   const [selectedIncident, setSelectedIncident] = useState(null);
 
   useEffect(() => {
+    const authToken = token 
+      || localStorage.getItem("accessToken") 
+      || localStorage.getItem("token");
+
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     fetch(`${apiUrl}/api/incidents`, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${authToken}` }
     })
-    .then(res => res.json())
-    .then(data => setIncidents(data))
-    .catch(console.error);
+    .then(res => {
+      if (!res.ok) throw new Error('Failed to fetch incidents');
+      return res.json();
+    })
+    .then(data => {
+      if (Array.isArray(data)) {
+        setIncidents(data);
+      } else {
+        setIncidents([]);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      setIncidents([]);
+    });
   }, [token]);
 
-  const filtered = incidents.filter(i => 
-    i.type.toLowerCase().includes(search.toLowerCase()) || 
-    i.description.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = Array.isArray(incidents) 
+    ? incidents.filter(i => 
+        i && (
+          (i.type && i.type.toLowerCase().includes(search.toLowerCase())) || 
+          (i.description && i.description.toLowerCase().includes(search.toLowerCase()))
+        )
+      )
+    : [];
 
   return (
     <div className="p-8">
@@ -56,7 +76,7 @@ export default function Incidents({ token }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
-            {filteredIncidents.map((incident, i) => (
+            {Array.isArray(filtered) && filtered.map((incident, i) => (
               <motion.tr 
                 key={incident.id}
                 initial={{ opacity: 0, y: 10 }}
