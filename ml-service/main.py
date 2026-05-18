@@ -4,6 +4,11 @@ from sklearn.ensemble import IsolationForest
 import numpy as np
 import requests
 from apscheduler.schedulers.background import BackgroundScheduler
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5000")
 
 app = FastAPI(title="SafeZone ML Service")
 
@@ -41,7 +46,7 @@ def run_anomaly_detection_job():
                 "is_anomaly": is_anomaly
             })
             
-        requests.post("http://safezone-backend:5000/api/alerts/webhook", json={"results": results})
+        requests.post(f"{BACKEND_URL}/api/alerts/webhook", json={"results": results})
         print("Anomaly detection job finished, webhook triggered.")
     except Exception as e:
         print("Error in background job:", e)
