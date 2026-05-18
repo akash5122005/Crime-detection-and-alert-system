@@ -29,13 +29,29 @@ export default function CrimeMap({ token }) {
   const [isLegendOpen, setIsLegendOpen] = useState(true);
 
   useEffect(() => {
+    const authToken = token 
+      || localStorage.getItem("accessToken") 
+      || localStorage.getItem("token");
+
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     fetch(`${apiUrl}/api/incidents`, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${authToken}` }
     })
-    .then(res => res.json())
-    .then(data => setIncidents(data))
-    .catch(console.error);
+    .then(res => {
+      if (!res.ok) throw new Error('Failed to fetch incidents');
+      return res.json();
+    })
+    .then(data => {
+      if (Array.isArray(data)) {
+        setIncidents(data);
+      } else {
+        setIncidents([]);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      setIncidents([]);
+    });
   }, [token]);
 
   return (
@@ -49,32 +65,34 @@ export default function CrimeMap({ token }) {
         <ChangeView center={mapConfig.center} zoom={mapConfig.zoom} />
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
         
-        {incidents.map(incident => (
-          <Marker 
-            key={incident.id} 
-            position={[incident.lat, incident.lng]}
-            eventHandlers={{
-              click: () => setMapConfig({ center: [incident.lat, incident.lng], zoom: 16 })
-            }}
-          >
-            <Popup className="custom-popup">
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="p-2"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-2 h-2 rounded-full ${incident.severity >= 4 ? 'bg-red-500' : 'bg-yellow-500'}`}></div>
-                  <span className="font-bold text-slate-900">{incident.type}</span>
-                </div>
-                <p className="text-xs text-slate-600 mb-2">{incident.description}</p>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  Zone: {incident.zone_id}
-                </div>
-              </motion.div>
-            </Popup>
-          </Marker>
-        ))}
+        {Array.isArray(incidents) && incidents
+          .filter(incident => incident && typeof incident.lat === 'number' && typeof incident.lng === 'number')
+          .map(incident => (
+            <Marker 
+              key={incident.id} 
+              position={[incident.lat, incident.lng]}
+              eventHandlers={{
+                click: () => setMapConfig({ center: [incident.lat, incident.lng], zoom: 16 })
+              }}
+            >
+              <Popup className="custom-popup">
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  className="p-2"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-2 h-2 rounded-full ${incident.severity >= 4 ? 'bg-red-500' : 'bg-yellow-500'}`}></div>
+                    <span className="font-bold text-slate-900">{incident.type}</span>
+                  </div>
+                  <p className="text-xs text-slate-600 mb-2">{incident.description}</p>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Zone: {incident.zone_id}
+                  </div>
+                </motion.div>
+              </Popup>
+            </Marker>
+          ))}
       </MapContainer>
 
       {/* Floating UI Elements */}
